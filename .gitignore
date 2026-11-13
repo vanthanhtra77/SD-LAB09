@@ -2,6 +2,10 @@
 bin/
 *.class
 
+# Do not track docs and uml on git
+docs/
+uml/
+
 # Log and temporary files
 *.log
 
