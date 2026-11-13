@@ -1,0 +1,151 @@
+@startuml ClassDiagram_TemplateMethod_Lab09
+' ==============================================================================
+' LAB 09: MẪU THIẾT KẾ TEMPLATE METHOD
+' ĐỀ TÀI: HỆ THỐNG XỬ LÝ ĐƠN HÀNG THƯƠNG MẠI ĐIỆN TỬ (ORDER PROCESSING SYSTEM)
+' ==============================================================================
+
+skinparam classAttributeIconSize 0
+skinparam backgroundColor #FFFFFF
+skinparam roundcorner 10
+skinparam defaultFontName "Segoe UI", Arial, sans-serif
+skinparam class {
+    BackgroundColor #F8F9FA
+    ArrowColor #2C3E50
+    BorderColor #34495E
+}
+
+package "com.lab9.model" {
+    class Customer {
+        - id: String
+        - name: String
+        - email: String
+        - phone: String
+        - address: String
+        - isVip: boolean
+        + Customer(id, name, email, phone, address, isVip)
+        + getId(): String
+        + getName(): String
+        + getEmail(): String
+        + getPhone(): String
+        + getAddress(): String
+        + isVip(): boolean
+        + toString(): String
+    }
+
+    class OrderItem {
+        - productId: String
+        - productName: String
+        - quantity: int
+        - unitPrice: double
+        - weightKg: double
+        - isFragile: boolean
+        + OrderItem(productId, productName, quantity, unitPrice, weightKg, isFragile)
+        + getProductId(): String
+        + getProductName(): String
+        + getQuantity(): int
+        + getUnitPrice(): double
+        + getWeightKg(): double
+        + isFragile(): boolean
+        + getTotalPrice(): double
+        + toString(): String
+    }
+
+    class Order {
+        - orderId: String
+        - customer: Customer
+        - items: List<OrderItem>
+        - orderDate: LocalDateTime
+        - paymentMethod: String
+        - shippingMethod: String
+        - trackingCode: String
+        - status: String
+        - shippingFee: double
+        - discountAmount: double
+        - giftWrapRequested: boolean
+        + Order(orderId, customer)
+        + addItem(item: OrderItem): void
+        + getSubtotal(): double
+        + getTotalWeightKg(): double
+        + hasFragileItems(): boolean
+        + getFinalTotal(): double
+        + printSummary(): void
+    }
+}
+
+package "com.lab9.template" {
+    abstract class OrderProcessor <<AbstractClass>> #EBF5FB {
+        ' -------------------------------------------------------------
+        ' TEMPLATE METHOD (Phương thức khuôn mẫu - Khung thuật toán)
+        ' -------------------------------------------------------------
+        + processOrder(order: Order): void {final}
+
+        ' Các bước chung / bất biến (Concrete Methods)
+        # validateOrder(order: Order): void
+        # applyDiscounts(order: Order): void
+        # sendNotification(order: Order): void
+        # recordAuditLog(order: Order): void
+
+        ' Các bước biến đổi bắt buộc lớp con ghi đè (Primitive Operations)
+        # {abstract} processPayment(order: Order): void
+        # {abstract} packItems(order: Order): void
+        # {abstract} shipOrder(order: Order): void
+
+        ' Các Hook Methods (Lớp con có thể ghi đè tùy chọn)
+        # isGiftWrappingRequired(order: Order): boolean
+        # wrapGift(order: Order): void
+        # performSpecialHandling(order: Order): void
+    }
+
+    note right of OrderProcessor::"processOrder(order: Order): void {final}"
+      <b>Template Method (final):</b>
+      Quy định cố định khung sườn thuật toán:
+      1. validateOrder(order)
+      2. applyDiscounts(order)
+      3. processPayment(order) [Abstract]
+      4. packItems(order) [Abstract]
+      5. if (isGiftWrappingRequired) wrapGift(order) [Hook]
+      6. performSpecialHandling(order) [Hook]
+      7. shipOrder(order) [Abstract]
+      8. sendNotification(order)
+      9. recordAuditLog(order)
+    end note
+
+    class StandardOrderProcessor <<ConcreteClass>> #EAFAF1 {
+        # processPayment(order: Order): void
+        # packItems(order: Order): void
+        # shipOrder(order: Order): void
+    }
+
+    class FragileOrderProcessor <<ConcreteClass>> #FDEDEC {
+        # processPayment(order: Order): void
+        # packItems(order: Order): void
+        # performSpecialHandling(order: Order): void
+        # shipOrder(order: Order): void
+    }
+
+    class InternationalOrderProcessor <<ConcreteClass>> #FEF9E7 {
+        # processPayment(order: Order): void
+        # packItems(order: Order): void
+        # performSpecialHandling(order: Order): void
+        # shipOrder(order: Order): void
+    }
+}
+
+class Main {
+    + {static} main(args: String[]): void
+}
+
+' Quan hệ giữa các lớp
+Order "1" *-- "1..*" OrderItem : chứa
+Order "1" --> "1" Customer : thuộc về
+
+OrderProcessor ..> Order : sử dụng (uses)
+
+StandardOrderProcessor --|> OrderProcessor : kế thừa
+FragileOrderProcessor --|> OrderProcessor : kế thừa
+InternationalOrderProcessor --|> OrderProcessor : kế thừa
+
+Main ..> OrderProcessor : gọi processOrder()
+Main ..> Order : tạo đơn hàng
+
+@enduml
